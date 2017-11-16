@@ -1,10 +1,12 @@
 #include <EEPROM.h>
 
 #include <Arduboy.h>
+#include <ArduboyTones.h>
 #include "SquarioGame.h"
 #include "DefinesImagesAndSounds.h"
 
 Arduboy display;
+ArduboyTones sound(display.audio.enabled);
 SquarioGame Game( &display );
 
 char text[16];
@@ -47,20 +49,12 @@ void TitleScreen() {
   for ( uint8_t a = 0; a < GameSeeds; a++ ) Game.Seeds[a] = random( 255 );
 }
 
-uint8_t SoundCounter = 0;
 const byte *SFX = 0;
 const unsigned int *SFXNoteSet;
 int SFX_Counter = -1;
 unsigned long duration = 0, lastNote = 0;
 void SoundEngine() {
   if ( !SoundOn ) return;
-  if ( !display.tunes.playing() ) {
-    if      ( SoundCounter < 8 ) display.tunes.playScore(Verse);
-    else if ( SoundCounter < 12 ) display.tunes.playScore(PreChorus);
-    else if ( SoundCounter < 16 ) display.tunes.playScore(Chorus);
-    SoundCounter++;
-    if ( SoundCounter == 16 ) SoundCounter = 0;
-  }
   if (Game.SFX) {
     SFXNoteSet = SFXFrequencies;
     SFX = Game.SFX;
@@ -80,13 +74,13 @@ void SoundEngine() {
     byte dMultiplier = Packet & 0x0F;
     duration = pgm_read_byte(SFX) + (pgm_read_byte(SFX+1) * dMultiplier);
     unsigned long freq = ( pgm_read_word( SFXNoteSet + note - 1 ) ) / 2;
-    display.tunes.tone( freq, duration );
+    sound.tone( freq, duration );
+    delay(duration);
     lastNote = currTime;
   }
 }
 
 void loop() {
-  SoundCounter = 0;
   TitleScreen();
   Game.NewGame( );
   while ( Game.Event ) { // 0 is Off
@@ -110,7 +104,6 @@ void loop() {
       display.display();
     }
   }
-  display.tunes.stopScore();
   if (Game.Score) enterHighScore(1);
   displayHighScores(1);
 }
@@ -161,16 +154,16 @@ void enterHighScore(byte file) {
           if ( input & LEFT_BUTTON || input & B_BUTTON ) {
             index--;
             if (index < 0) index = 0;
-            else if ( SoundOn ) display.tunes.tone(1046, 250);
+            else if ( SoundOn ) sound.tone(1046, 250);
           }
           if ( input & RIGHT_BUTTON ) {
             index++;
             if (index > 2) index = 2;
-            else if ( SoundOn ) display.tunes.tone(1046, 250);
+            else if ( SoundOn ) sound.tone(1046, 250);
           }
           if ( input & DOWN_BUTTON ) {
             initials[index]++;
-            if ( SoundOn ) display.tunes.tone(523, 250);
+            if ( SoundOn ) sound.tone(523, 250);
             // A-Z 0-9 :-? !-/ ' '
             if (initials[index] == '0') initials[index] = ' ';
             if (initials[index] == '!') initials[index] = 'A';
@@ -179,7 +172,7 @@ void enterHighScore(byte file) {
           }
           if ( input & UP_BUTTON ) {
             initials[index]--;
-            if ( SoundOn ) display.tunes.tone(523, 250);
+            if ( SoundOn ) sound.tone(523, 250);
             if (initials[index] == ' ') initials[index] = '?';
             if (initials[index] == '/') initials[index] = 'Z';
             if (initials[index] == 31) initials[index] = '/';
@@ -188,9 +181,9 @@ void enterHighScore(byte file) {
           if ( input & A_BUTTON ) {
             if (index < 2) {
               index++;
-              if ( SoundOn ) display.tunes.tone(1046, 250);
+              if ( SoundOn ) sound.tone(1046, 250);
             } else {
-              if ( SoundOn ) display.tunes.tone(1046, 250);
+              if ( SoundOn ) sound.tone(1046, 250);
               break;
             }
           }
