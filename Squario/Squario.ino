@@ -75,7 +75,7 @@ void SoundEngine() {
     duration = pgm_read_byte(SFX) + (pgm_read_byte(SFX+1) * dMultiplier);
     unsigned long freq = ( pgm_read_word( SFXNoteSet + note - 1 ) ) / 2;
     sound.tone( freq, duration );
-    delay(duration);
+    //delay(duration);
     lastNote = currTime;
   }
 }
